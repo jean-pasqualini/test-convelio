@@ -16,6 +16,7 @@ require_once __DIR__ . '/../src/TemplateManager.php';
 require_once __DIR__ . '/../src/PlaceholderRender/PlaceholderRenderInterface.php';
 require_once __DIR__ . '/../src/PlaceholderRender/Quote/QuoteDestinationPlaceholderRender.php';
 require_once __DIR__ . '/../src/PlaceholderRender/Quote/QuoteSummaryPlaceholderRender.php';
+require_once __DIR__ . '/../src/PlaceholderRender/User/UserPlaceholderRender.php';
 
 class TemplateManagerTest extends PHPUnit_Framework_TestCase
 {
@@ -43,8 +44,9 @@ class TemplateManagerTest extends PHPUnit_Framework_TestCase
         $destinationId                  = $faker->randomNumber();
         $expectedDestination = DestinationRepository::getInstance()->getById($destinationId);
         $expectedUser        = ApplicationContext::getInstance()->getCurrentUser();
+        $expectedQuoteId      = $faker->randomNumber();
 
-        $quote = new Quote($faker->randomNumber(), $faker->randomNumber(), $destinationId, $faker->date());
+        $quote = new Quote($expectedQuoteId, $faker->randomNumber(), $destinationId, $faker->date());
 
         $template = new Template(
             1,
@@ -54,6 +56,8 @@ Bonjour [user:first_name],
 
 Merci de nous avoir contacté pour votre livraison à [quote:destination_name].
 
+[quote:summary]
+
 Bien cordialement,
 
 L'équipe Convelio.com
@@ -62,6 +66,7 @@ L'équipe Convelio.com
 
         $templateManager->registerPlaceholderRender(new QuoteSummaryPlaceholderRender());
         $templateManager->registerPlaceholderRender(new QuoteDestinationPlaceholderRender());
+        $templateManager->registerPlaceholderRender(new UserPlaceholderRender());
 
         $message = $templateManager->getTemplateComputed(
             $template,
@@ -75,6 +80,8 @@ L'équipe Convelio.com
 Bonjour " . $expectedUser->firstname . ",
 
 Merci de nous avoir contacté pour votre livraison à " . $expectedDestination->countryName . ".
+
+".$expectedQuoteId."
 
 Bien cordialement,
 

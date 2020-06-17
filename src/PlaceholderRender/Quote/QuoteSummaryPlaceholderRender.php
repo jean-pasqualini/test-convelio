@@ -16,14 +16,14 @@ class QuoteSummaryPlaceholderRender implements PlaceholderRenderInterface
         ];
     }
 
-    public function renderHtml(array $data): string
+    public function renderHtml(array $context): string
     {
-        return Quote::renderHtml($_quoteFromRepository);
+        return Quote::renderHtml($context['quoteFromRepository']);
     }
 
-    public function renderPlaintext(array $data): string
+    public function renderPlaintext(array $context): string
     {
-        return Quote::renderText($_quoteFromRepository);
+        return Quote::renderText($context['quoteFromRepository']);
     }
 
     public function getPlaceholders(): array
