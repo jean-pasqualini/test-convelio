@@ -2,6 +2,11 @@
 
 class TemplateManager
 {
+    /**
+     * @var PlaceholderRenderInteface[]
+     */
+    private $placeholderRenders = [];
+
     public function getTemplateComputed(Template $tpl, array $data)
     {
         if (!$tpl) {
@@ -15,50 +20,28 @@ class TemplateManager
         return $replaced;
     }
 
-    private function computeText($text, array $data)
+    public function registerPlaceholderRender(PlaceholderRenderInterface $placeholderRender)
     {
-        $APPLICATION_CONTEXT = ApplicationContext::getInstance();
+        $this->placeholderRenders[] = $placeholderRender;
+    }
 
-        $quote = (isset($data['quote']) and $data['quote'] instanceof Quote) ? $data['quote'] : null;
+    private function computeText($text, array $data)
+    {   
+        foreach ($this->placeholderRenders as $placeholderRender) {
+            $context = $placeholderRender->buildContext($data);
 
-        if ($quote)
-        {
-            $_quoteFromRepository = QuoteRepository::getInstance()->getById($quote->id);
-            $usefulObject = SiteRepository::getInstance()->getById($quote->siteId);
-            $destinationOfQuote = DestinationRepository::getInstance()->getById($quote->destinationId);
-
-            if(strpos($text, '[quote:destination_link]') !== false){
-                $destination = DestinationRepository::getInstance()->getById($quote->destinationId);
-            }
-
-            $containsSummaryHtml = strpos($text, '[quote:summary_html]');
-            $containsSummary     = strpos($text, '[quote:summary]');
-
-            if ($containsSummaryHtml !== false || $containsSummary !== false) {
-                if ($containsSummaryHtml !== false) {
+            foreach ($placeholderRender->getPlaceholders() as $placeholder => $renderMethodName) {
+                if (strpos($text, $placeholder) !== false) {
                     $text = str_replace(
-                        '[quote:summary_html]',
-                        Quote::renderHtml($_quoteFromRepository),
-                        $text
-                    );
-                }
-                if ($containsSummary !== false) {
-                    $text = str_replace(
-                        '[quote:summary]',
-                        Quote::renderText($_quoteFromRepository),
+                        $placeholder,
+                        call_user_func([$placeholderRender, $renderMethodName], $context),
                         $text
                     );
                 }
             }
-
-            (strpos($text, '[quote:destination_name]') !== false) and $text = str_replace('[quote:destination_name]',$destinationOfQuote->countryName,$text);
         }
 
-        if (isset($destination))
-            $text = str_replace('[quote:destination_link]', $usefulObject->url . '/' . $destination->countryName . '/quote/' . $_quoteFromRepository->id, $text);
-        else
-            $text = str_replace('[quote:destination_link]', '', $text);
-
+        $APPLICATION_CONTEXT = ApplicationContext::getInstance();
         /*
          * USER
          * [user:*]

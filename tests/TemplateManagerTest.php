@@ -1,5 +1,6 @@
 <?php
 
+// I must admit that the autoload could have been usefull :)
 require_once __DIR__ . '/../src/Entity/Destination.php';
 require_once __DIR__ . '/../src/Entity/Quote.php';
 require_once __DIR__ . '/../src/Entity/Site.php';
@@ -12,6 +13,9 @@ require_once __DIR__ . '/../src/Repository/DestinationRepository.php';
 require_once __DIR__ . '/../src/Repository/QuoteRepository.php';
 require_once __DIR__ . '/../src/Repository/SiteRepository.php';
 require_once __DIR__ . '/../src/TemplateManager.php';
+require_once __DIR__ . '/../src/PlaceholderRender/PlaceholderRenderInterface.php';
+require_once __DIR__ . '/../src/PlaceholderRender/Quote/QuoteDestinationPlaceholderRender.php';
+require_once __DIR__ . '/../src/PlaceholderRender/Quote/QuoteSummaryPlaceholderRender.php';
 
 class TemplateManagerTest extends PHPUnit_Framework_TestCase
 {
@@ -55,6 +59,9 @@ Bien cordialement,
 L'équipe Convelio.com
 ");
         $templateManager = new TemplateManager();
+
+        $templateManager->registerPlaceholderRender(new QuoteSummaryPlaceholderRender());
+        $templateManager->registerPlaceholderRender(new QuoteDestinationPlaceholderRender());
 
         $message = $templateManager->getTemplateComputed(
             $template,
